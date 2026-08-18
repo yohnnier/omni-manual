@@ -1,0 +1,33 @@
+{
+  "_comentario": "Registro de entornos/VPS del proyecto omni-manual. Rellena 'hosts' con los dominios o IPs reales de cada servidor para que la deteccion automatica funcione.",
+  "actualizado": "2026-08-18",
+  "entornos": [
+    {
+      "id": "VPSVIMED",
+      "nombre": "VPSVIMED",
+      "cloud": "Cloud-1",
+      "color": "#06b6d4",
+      "rol": "por definir",
+      "hosts": [],
+      "notas": "Anotar aqui dominio, IP publica y usuario SSH."
+    },
+    {
+      "id": "ASENFCUARTA",
+      "nombre": "ASENFCUARTA",
+      "cloud": "Cloud-2",
+      "color": "#a78bfa",
+      "rol": "por definir",
+      "hosts": [],
+      "notas": "Anotar aqui dominio, IP publica y usuario SSH."
+    },
+    {
+      "id": "ASENF20",
+      "nombre": "ASENF20",
+      "cloud": "Cloud-3",
+      "color": "#22c55e",
+      "rol": "por definir",
+      "hosts": [],
+      "notas": "Anotar aqui dominio, IP publica y usuario SSH."
+    }
+  ]
+}

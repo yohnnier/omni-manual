@@ -19,6 +19,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .badge{font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:20px;display:flex;align-items:center;gap:3px}
 .badge-ai{color:var(--accent);background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2)}
 .badge-pg{color:var(--green);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2)}
+.badge-env{color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);cursor:pointer;user-select:none}
+.badge-env.env-desconocido{color:var(--amber);background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3)}
+.badge-env .dot{background:currentColor}
+.env-ovl{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:60px 14px 14px}
+.env-ovl.open{display:flex}
+.env-card{width:100%;max-width:380px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden}
+.env-card h3{font-size:13px;font-weight:600;padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.env-x{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;padding:0 2px}
+.env-rows{padding:6px 14px 12px}
+.env-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.env-row:last-child{border-bottom:none}
+.env-row span:first-child{color:var(--text3);flex-shrink:0}
+.env-row span:last-child{font-family:var(--mono);color:var(--text);text-align:right;word-break:break-all}
+.env-pick{padding:10px 14px 14px;border-top:1px solid var(--border)}
+.env-pick p{font-size:10px;color:var(--text3);margin-bottom:8px}
+.env-pick button{display:inline-block;margin:0 6px 6px 0;padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer}
+.env-pick button.sel{border-color:var(--accent);color:var(--accent);background:rgba(6,182,212,.1)}
 .dot{width:4px;height:4px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .key-banner{height:36px;border-bottom:1px solid rgba(245,158,11,.2);padding:0 12px;font-size:11px;color:var(--amber);display:flex;align-items:center;gap:7px;flex-shrink:0;background:rgba(245,158,11,.06)}
@@ -2197,8 +2214,20 @@ Soltar el kit del frontal del aparato.
   <div style="display:flex;align-items:center;gap:6px">
     <div class="badge badge-ai">&#9889; DeepSeek</div>
     <div class="badge badge-pg"><div class="dot"></div>25 págs</div>
+    <div class="badge badge-env" id="envBadge" onclick="abrirEnv()" title="Entorno / VPS — pulsa para ver detalles"><div class="dot"></div><span id="envNombre">...</span></div>
   </div>
 </header>
+
+<div class="env-ovl" id="envOvl" onclick="if(event.target===this)cerrarEnv()">
+  <div class="env-card">
+    <h3><span>Entorno de trabajo</span><button class="env-x" onclick="cerrarEnv()">&times;</button></h3>
+    <div class="env-rows" id="envRows"></div>
+    <div class="env-pick">
+      <p>Forzar entorno (se guarda en este navegador):</p>
+      <div id="envBotones"></div>
+    </div>
+  </div>
+</div>
 
 <div class="key-banner">
   <span>&#128273;</span>
@@ -2468,4 +2497,165 @@ document.getElementById('inp').addEventListener('keydown',function(e){
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
 });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLb(); });
+
+/* ================= ENTORNO / VPS ==================================
+   Responde a: "en que VPS estoy trabajando".
+   Orden de deteccion:
+     1. ?vps=NOMBRE en la URL           (queda guardado)
+     2. eleccion manual guardada        (localStorage omni_entorno)
+     3. entorno.json servido junto a este index.html  <- lo escribe
+        scripts/marcar-entorno.sh en cada VPS. Es la fuente fiable.
+     4. hostname de la URL contra ENTORNOS[].hosts
+     5. localhost / file://  -> LOCAL
+     6. SIN IDENTIFICAR (badge ambar)
+   ================================================================= */
+var ENTORNOS = [
+  { id:'VPSVIMED',    cloud:'Cloud-1', color:'#06b6d4', hosts:[] },
+  { id:'ASENFCUARTA', cloud:'Cloud-2', color:'#a78bfa', hosts:[] },
+  { id:'ASENF20',     cloud:'Cloud-3', color:'#22c55e', hosts:[] }
+];
+
+var ENV = { nombre:'SIN IDENTIFICAR', origen:'no determinado', color:'#f59e0b',
+            cloud:'', host:'', extra:{} };
+
+function envPorId(id) {
+  for (var i=0;i<ENTORNOS.length;i++) if (ENTORNOS[i].id===id) return ENTORNOS[i];
+  return null;
+}
+
+function pintarEnv() {
+  var b = document.getElementById('envBadge');
+  var n = document.getElementById('envNombre');
+  if (!b || !n) return;
+  n.textContent = ENV.nombre;
+  var desconocido = (ENV.nombre === 'SIN IDENTIFICAR');
+  b.className = 'badge badge-env' + (desconocido ? ' env-desconocido' : '');
+  if (!desconocido) {
+    b.style.color = ENV.color;
+    b.style.background = 'rgba(255,255,255,.06)';
+    b.style.borderColor = 'rgba(255,255,255,.18)';
+  } else {
+    b.style.color=''; b.style.background=''; b.style.borderColor='';
+  }
+  b.title = 'Entorno: ' + ENV.nombre + ' (' + ENV.origen + ') - pulsa para detalles';
+}
+
+function detectarEnv() {
+  ENV.host = (location.hostname || '(archivo local)');
+
+  var m = location.search.match(/[?&]vps=([^&]+)/i);
+  if (m) {
+    var forzado = decodeURIComponent(m[1]).toUpperCase();
+    try { localStorage.setItem('omni_entorno', forzado); } catch(e) {}
+  }
+
+  var guardado = null;
+  try { guardado = localStorage.getItem('omni_entorno'); } catch(e) {}
+  if (guardado) {
+    var e1 = envPorId(guardado);
+    ENV.nombre = guardado;
+    ENV.origen = 'seleccion manual guardada';
+    if (e1) { ENV.color = e1.color; ENV.cloud = e1.cloud; }
+    pintarEnv();
+    return;
+  }
+
+  var hn = (location.hostname || '').toLowerCase();
+  for (var i=0;i<ENTORNOS.length;i++) {
+    var e = ENTORNOS[i];
+    if (hn && hn.toUpperCase().indexOf(e.id) !== -1) {
+      ENV.nombre=e.id; ENV.origen='hostname de la URL'; ENV.color=e.color; ENV.cloud=e.cloud;
+      pintarEnv(); return;
+    }
+    for (var j=0;j<e.hosts.length;j++) {
+      if (hn && hn.indexOf(String(e.hosts[j]).toLowerCase()) !== -1) {
+        ENV.nombre=e.id; ENV.origen='host registrado: '+e.hosts[j]; ENV.color=e.color; ENV.cloud=e.cloud;
+        pintarEnv(); return;
+      }
+    }
+  }
+
+  if (location.protocol === 'file:') {
+    ENV.nombre='ARCHIVO LOCAL'; ENV.origen='abierto como file://'; ENV.color='#8b929e';
+  } else if (hn==='localhost' || hn==='127.0.0.1' || hn==='::1') {
+    ENV.nombre='LOCAL'; ENV.origen='servidor local'; ENV.color='#8b929e';
+  }
+  pintarEnv();
+}
+
+function detectarEnvRemoto() {
+  /* entorno.json escrito por marcar-entorno.sh en el propio VPS */
+  if (location.protocol === 'file:') return;
+  var guardado = null;
+  try { guardado = localStorage.getItem('omni_entorno'); } catch(e) {}
+  if (guardado) return;               /* la eleccion manual manda */
+  var x = new XMLHttpRequest();
+  x.open('GET', 'entorno.json?t=' + Date.now(), true);
+  x.timeout = 4000;
+  x.onload = function() {
+    if (x.status < 200 || x.status >= 300) return;
+    var d;
+    try { d = JSON.parse(x.responseText); } catch(err) { return; }
+    if (!d || !d.entorno) return;
+    var e = envPorId(String(d.entorno).toUpperCase());
+    ENV.nombre = String(d.entorno).toUpperCase();
+    ENV.origen = 'entorno.json del servidor';
+    if (e) { ENV.color = e.color; ENV.cloud = e.cloud; }
+    ENV.extra = { hostname: d.hostname || '', ip: d.ip || '', marcado: d.marcado || '' };
+    pintarEnv();
+  };
+  x.onerror = function(){}; x.ontimeout = function(){};
+  try { x.send(); } catch(err) {}
+}
+
+function filaEnv(k, v) {
+  return '<div class="env-row"><span>'+k+'</span><span>'+(v||'-')+'</span></div>';
+}
+
+function abrirEnv() {
+  var h = '';
+  h += filaEnv('Entorno', ENV.nombre);
+  if (ENV.cloud) h += filaEnv('Cloud', ENV.cloud);
+  h += filaEnv('Detectado por', ENV.origen);
+  if (ENV.extra.hostname) h += filaEnv('Hostname', ENV.extra.hostname);
+  if (ENV.extra.ip)       h += filaEnv('IP', ENV.extra.ip);
+  if (ENV.extra.marcado)  h += filaEnv('Marcado', ENV.extra.marcado);
+  h += filaEnv('URL host', ENV.host + (location.port ? ':'+location.port : ''));
+  h += filaEnv('Protocolo', location.protocol.replace(':',''));
+  h += filaEnv('Ruta', location.pathname);
+  h += filaEnv('Hora local', new Date().toLocaleString());
+  document.getElementById('envRows').innerHTML = h;
+
+  var b = '';
+  for (var i=0;i<ENTORNOS.length;i++) {
+    var sel = (ENTORNOS[i].id === ENV.nombre) ? ' class="sel"' : '';
+    b += '<button'+sel+' onclick="fijarEnv(\''+ENTORNOS[i].id+'\')">'+ENTORNOS[i].id+'</button>';
+  }
+  b += '<button onclick="fijarEnv(null)">Auto</button>';
+  document.getElementById('envBotones').innerHTML = b;
+
+  document.getElementById('envOvl').classList.add('open');
+}
+
+function cerrarEnv() {
+  var o = document.getElementById('envOvl');
+  if (o) o.classList.remove('open');
+}
+
+function fijarEnv(id) {
+  try {
+    if (id) localStorage.setItem('omni_entorno', id);
+    else    localStorage.removeItem('omni_entorno');
+  } catch(e) {}
+  ENV = { nombre:'SIN IDENTIFICAR', origen:'no determinado', color:'#f59e0b',
+          cloud:'', host:'', extra:{} };
+  detectarEnv();
+  detectarEnvRemoto();
+  cerrarEnv();
+}
+
+detectarEnv();
+window.addEventListener('load', detectarEnvRemoto);
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') cerrarEnv(); });
+
 </script></body></html>
