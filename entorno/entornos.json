@@ -1,5 +1,5 @@
 {
-  "_comentario": "Registro de entornos/VPS del proyecto omni-manual. Los campos 'hosts' alimentan la deteccion automatica: la app compara el hostname/IP de su URL contra esta lista, y whereami.sh compara la IP del servidor.",
+  "_comentario": "Registro de entornos/VPS del proyecto omni-manual. Los campos 'hosts' alimentan la deteccion automatica: la app compara el hostname/IP de su URL contra esta lista, y whereami.sh compara la IP del servidor. El campo 'alias' permite nombrarlos en corto (p.ej. /vps vimed).",
   "actualizado": "2026-08-18",
   "entornos": [
     {
@@ -11,9 +11,22 @@
       "ip": "216.185.51.168",
       "mascara": "255.255.255.0",
       "gateway": "216.185.51.1",
-      "hosts": ["216.185.51.168"],
-      "recursos": { "cpu": 2, "ram_gib": 4, "disco_gb": 40 },
-      "notas": "Comparte subred /24 con ASENFCUARTA."
+      "hosts": [
+        "216.185.51.168"
+      ],
+      "recursos": {
+        "cpu": 2,
+        "ram_gib": 4,
+        "disco_gb": 40
+      },
+      "notas": "Comparte subred /24 con ASENFCUARTA.",
+      "alias": [
+        "VIMED",
+        "VPS-VIMED",
+        "CLOUD-1",
+        "CLOUD1",
+        "1"
+      ]
     },
     {
       "id": "ASENFCUARTA",
@@ -24,9 +37,22 @@
       "ip": "216.185.51.156",
       "mascara": "255.255.255.0",
       "gateway": "216.185.51.1",
-      "hosts": ["216.185.51.156"],
-      "recursos": { "cpu": 2, "ram_gib": 8, "disco_gb": 50 },
-      "notas": "Comparte subred /24 con VPSVIMED."
+      "hosts": [
+        "216.185.51.156"
+      ],
+      "recursos": {
+        "cpu": 2,
+        "ram_gib": 8,
+        "disco_gb": 50
+      },
+      "notas": "Comparte subred /24 con VPSVIMED.",
+      "alias": [
+        "CUARTA",
+        "ASENF-CUARTA",
+        "CLOUD-2",
+        "CLOUD2",
+        "2"
+      ]
     },
     {
       "id": "ASENF20",
@@ -37,9 +63,22 @@
       "ip": "109.72.119.70",
       "mascara": "255.255.255.128",
       "gateway": "109.72.119.1",
-      "hosts": ["109.72.119.70"],
-      "recursos": { "cpu": 4, "ram_gib": 12, "disco_gb": 100 },
-      "notas": "El mas grande de los tres. Subred /25 distinta a los otros dos."
+      "hosts": [
+        "109.72.119.70"
+      ],
+      "recursos": {
+        "cpu": 4,
+        "ram_gib": 12,
+        "disco_gb": 100
+      },
+      "notas": "El mas grande de los tres. Subred /25 distinta a los otros dos.",
+      "alias": [
+        "20",
+        "ASENF-20",
+        "CLOUD-3",
+        "CLOUD3",
+        "3"
+      ]
     }
   ]
 }
