@@ -2510,9 +2510,9 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLb();
      6. SIN IDENTIFICAR (badge ambar)
    ================================================================= */
 var ENTORNOS = [
-  { id:'VPSVIMED',    cloud:'Cloud-1', color:'#06b6d4', hosts:[] },
-  { id:'ASENFCUARTA', cloud:'Cloud-2', color:'#a78bfa', hosts:[] },
-  { id:'ASENF20',     cloud:'Cloud-3', color:'#22c55e', hosts:[] }
+  { id:'VPSVIMED',    cloud:'Cloud-1', color:'#06b6d4', ip:'216.185.51.168', hosts:['216.185.51.168'] },
+  { id:'ASENFCUARTA', cloud:'Cloud-2', color:'#a78bfa', ip:'216.185.51.156', hosts:['216.185.51.156'] },
+  { id:'ASENF20',     cloud:'Cloud-3', color:'#22c55e', ip:'109.72.119.70',  hosts:['109.72.119.70']  }
 ];
 
 var ENV = { nombre:'SIN IDENTIFICAR', origen:'no determinado', color:'#f59e0b',
@@ -2619,6 +2619,7 @@ function abrirEnv() {
   h += filaEnv('Detectado por', ENV.origen);
   if (ENV.extra.hostname) h += filaEnv('Hostname', ENV.extra.hostname);
   if (ENV.extra.ip)       h += filaEnv('IP', ENV.extra.ip);
+  else { var er = envPorId(ENV.nombre); if (er && er.ip) h += filaEnv('IP registrada', er.ip); }
   if (ENV.extra.marcado)  h += filaEnv('Marcado', ENV.extra.marcado);
   h += filaEnv('URL host', ENV.host + (location.port ? ':'+location.port : ''));
   h += filaEnv('Protocolo', location.protocol.replace(':',''));

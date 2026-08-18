@@ -14,6 +14,19 @@ set -uo pipefail
 MARCA="/etc/omni-entorno"
 CONOCIDOS="VPSVIMED ASENFCUARTA ASENF20"
 
+# IP real de cada VPS registrado (ver entorno/entornos.json)
+IP_VPSVIMED="216.185.51.168"
+IP_ASENFCUARTA="216.185.51.156"
+IP_ASENF20="109.72.119.70"
+
+ips_de() {
+  case "$1" in
+    VPSVIMED)    echo "$IP_VPSVIMED" ;;
+    ASENFCUARTA) echo "$IP_ASENFCUARTA" ;;
+    ASENF20)     echo "$IP_ASENF20" ;;
+  esac
+}
+
 detectar_entorno() {
   if [ -r "$MARCA" ]; then
     ENTORNO="$(head -n1 "$MARCA" | tr -d '[:space:]')"
@@ -32,8 +45,24 @@ detectar_entorno() {
       *"$c"*) ENTORNO="$c"; ORIGEN="hostname ($(hostname))"; return ;;
     esac
   done
+  # 4. coincidencia por IP (local o publica)
+  local mias ip_pub
+  mias="$(hostname -I 2>/dev/null || true)"
+  ip_pub="$(curl -s --max-time 4 https://ifconfig.me 2>/dev/null || true)"
+  for c in $CONOCIDOS; do
+    local esperada
+    esperada="$(ips_de "$c")"
+    [ -n "$esperada" ] || continue
+    case " $mias " in
+      *" $esperada "*) ENTORNO="$c"; ORIGEN="IP local $esperada"; return ;;
+    esac
+    if [ -n "$ip_pub" ] && [ "$ip_pub" = "$esperada" ]; then
+      ENTORNO="$c"; ORIGEN="IP publica $esperada"; return
+    fi
+  done
+
   ENTORNO="DESCONOCIDO"
-  ORIGEN="sin marca ni coincidencia de hostname"
+  ORIGEN="sin marca, ni hostname, ni IP conocida"
 }
 
 detectar_entorno
@@ -65,6 +94,14 @@ echo "RED"
 campo "IPs locales" "$(hostname -I 2>/dev/null | tr -s ' ' || echo n/d)"
 IP_PUB="$(curl -s --max-time 4 https://ifconfig.me 2>/dev/null || true)"
 campo "IP publica"  "${IP_PUB:-no disponible}"
+IP_ESPERADA="$(ips_de "$ENTORNO")"
+if [ -n "$IP_ESPERADA" ]; then
+  if [ "${IP_PUB:-}" = "$IP_ESPERADA" ] || printf ' %s ' "$(hostname -I 2>/dev/null)" | grep -q " $IP_ESPERADA "; then
+    campo "IP registrada" "$IP_ESPERADA  (coincide)"
+  else
+    campo "IP registrada" "$IP_ESPERADA  (NO coincide - revisar)"
+  fi
+fi
 echo
 
 echo "RECURSOS"

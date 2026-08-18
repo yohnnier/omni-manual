@@ -1,5 +1,5 @@
 {
-  "_comentario": "Registro de entornos/VPS del proyecto omni-manual. Rellena 'hosts' con los dominios o IPs reales de cada servidor para que la deteccion automatica funcione.",
+  "_comentario": "Registro de entornos/VPS del proyecto omni-manual. Los campos 'hosts' alimentan la deteccion automatica: la app compara el hostname/IP de su URL contra esta lista, y whereami.sh compara la IP del servidor.",
   "actualizado": "2026-08-18",
   "entornos": [
     {
@@ -8,8 +8,12 @@
       "cloud": "Cloud-1",
       "color": "#06b6d4",
       "rol": "por definir",
-      "hosts": [],
-      "notas": "Anotar aqui dominio, IP publica y usuario SSH."
+      "ip": "216.185.51.168",
+      "mascara": "255.255.255.0",
+      "gateway": "216.185.51.1",
+      "hosts": ["216.185.51.168"],
+      "recursos": { "cpu": 2, "ram_gib": 4, "disco_gb": 40 },
+      "notas": "Comparte subred /24 con ASENFCUARTA."
     },
     {
       "id": "ASENFCUARTA",
@@ -17,8 +21,12 @@
       "cloud": "Cloud-2",
       "color": "#a78bfa",
       "rol": "por definir",
-      "hosts": [],
-      "notas": "Anotar aqui dominio, IP publica y usuario SSH."
+      "ip": "216.185.51.156",
+      "mascara": "255.255.255.0",
+      "gateway": "216.185.51.1",
+      "hosts": ["216.185.51.156"],
+      "recursos": { "cpu": 2, "ram_gib": 8, "disco_gb": 50 },
+      "notas": "Comparte subred /24 con VPSVIMED."
     },
     {
       "id": "ASENF20",
@@ -26,8 +34,12 @@
       "cloud": "Cloud-3",
       "color": "#22c55e",
       "rol": "por definir",
-      "hosts": [],
-      "notas": "Anotar aqui dominio, IP publica y usuario SSH."
+      "ip": "109.72.119.70",
+      "mascara": "255.255.255.128",
+      "gateway": "109.72.119.1",
+      "hosts": ["109.72.119.70"],
+      "recursos": { "cpu": 4, "ram_gib": 12, "disco_gb": 100 },
+      "notas": "El mas grande de los tres. Subred /25 distinta a los otros dos."
     }
   ]
 }
